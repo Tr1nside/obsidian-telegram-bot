@@ -1,0 +1,15 @@
+[project]
+name = "obsidian-tg-bot"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ffmpeg>=1.4",
+    "openai-whisper>=20240930",
+    "pydub>=0.25.1",
+    "python-dotenv>=1.1.0",
+    "python-telegram-bot>=22.0",
+    "requests>=2.32.3",
+    "whisper>=1.1.10",
+]
