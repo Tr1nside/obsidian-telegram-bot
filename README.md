@@ -2,17 +2,12 @@
 При первом запуске бота, он отправит вам, ваш chat_id, который нужно будет вписать в ALLOWED_USER_ID
 Необходимо выполнить еще несколько пунктов перед запуском:
 - Заполнить конфигурацию
-    - OBSIDIAN_VAULT_PATH --- путь до вашего хранилища obsidian
-    - NOTES_FOLDER --- папка с заметками
+    - OBSIDIAN_VAULT_PATH - путь до вашего хранилища obsidian
+    - NOTES_FOLDER - папка с заметками
     - ну и так далее.
+- Создать .env файл, TELEGRAM_TOKEN=Ваш токен
 - Ввести свой токен для телеграмм бота
 
 # Зависимости 
-"ffmpeg>=1.4",
-"openai-whisper>=20240930",
-"pydub>=0.25.1",
-"python-dotenv>=1.1.0",
-"python-telegram-bot>=22.0",
-"requests>=2.32.3",
-"whisper>=1.1.10"
+[Файл конфигурации](https://github.com/Tr1nside/obsidian-telegram-bot/blob/main/pyproject.toml)
 
