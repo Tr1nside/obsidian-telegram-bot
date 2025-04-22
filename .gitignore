@@ -1,13 +1,67 @@
-# Python-generated files
+### Python ###
 __pycache__/
-*.py[oc]
+*.py[cod]
+*$py.class
+*.so
+.Python
 build/
+develop-eggs/
 dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
 wheels/
-*.egg-info
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+
+### Ruff ###
+.ruff_cache/
+ruff-report.html
+
+### VirtualEnv ###
+venv/
+.env/
+.venv/
+env/
+ENV/
+
+### IDE ###
+.vscode/
+.idea/
+*.swp
+*.swo
+
+### Logs & Databases ###
 *.log
-.venv
-.ruff_cache
+*.sqlite
+*.db
+
+### Dotenv ###
 .env
-.python-version
-uv.lock
+.env.local
+.env.development
+.env.test
+.env.production
+
+### Uvicorn / UV ###
+*.sock
+.pytest_cache/
+uvicorn.log
+
+### macOS ###
+.DS_Store
+
+### Jupyter ###
+.ipynb_checkpoints/
+
+### Testing ###
+.coverage
+htmlcov/
