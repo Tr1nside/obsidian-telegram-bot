@@ -65,3 +65,7 @@ uvicorn.log
 ### Testing ###
 .coverage
 htmlcov/
+
+### Markdown ###
+templates/
+.obsidian/
