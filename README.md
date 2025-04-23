@@ -34,16 +34,16 @@ brew install ffmpeg
 ```
 ## Установка 
 1. **Клонируйте репозиторий**: 
-	```bash
+```bash
 git clone https://github.com/Tr1nside/obsidian_bd.git
-	```
+```
 2. **Создайте виртуальное окружение** (рекомендуется): 
-	```bash
+```bash
 python -m venv venv
 source venv/bin/activate  # На Windows: venv\Scripts\activate
-
+```
 3. Установите зависимости:
-	```bash
+```bash
 pip install -r requirements.txt
 ```
 4. Создайте файл .env в корне проекта:
@@ -66,9 +66,9 @@ AUDIO_TEMP_FOLDER="./vault/cache/audio"
 - AUDIO_TEMP_FOLDER: Путь для временных файлов.
 
 5. Запустите бота
-	```bash
+```bash
 python app/main.py
-	```
+```
 
 ## Использование 
 1. Запустите бота и отправьте команду `/start`, чтобы получить ваш `user_id`. 
