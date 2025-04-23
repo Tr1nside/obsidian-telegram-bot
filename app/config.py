@@ -14,7 +14,6 @@ NOTES_FOLDER = os.getenv("NOTES_FOLDER").replace("\\", "/")
 PHOTOS_FOLDER = os.getenv("PHOTOS_FOLDER").replace("\\", "/")
 AUDIO_TEMP_FOLDER = os.getenv("AUDIO_TEMP_FOLDER").replace("\\", "/")
 
-print(OBSIDIAN_VAULT_PATH + '\n' + NOTES_FOLDER + '\n' + PHOTOS_FOLDER + '\n' + AUDIO_TEMP_FOLDER)
 
 # Создание папок
 os.makedirs(NOTES_FOLDER, exist_ok=True)

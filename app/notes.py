@@ -97,7 +97,7 @@ def append_to_note(content: str):
 
 def _format_content(type: ContentType, data: ContentData) -> str:
     """Function for formating content to be added to the note"""
-    match type:
+    match type, data:
         case (ContentType.TEXT, TextContentData(text)) | (ContentType.CAPTION, TextContentData(text)):
             return f"{text}\n"
         case ContentType.TRANSCRIPT, TranscriptContentData(transcript_text):
