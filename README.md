@@ -86,4 +86,3 @@ python app/main.py
 ## Лицензия
 
 Распространяется под лицензией MIT. См. [LICENSE](https://github.com/Tr1nside/obsidian-telegram-bot/blob/main/LICENSE).
-
