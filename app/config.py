@@ -8,11 +8,13 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 
 # Конфигурация
-ALLOWED_USER_ID = 1316772009
-OBSIDIAN_VAULT_PATH = r"C:\Users\Chertila\Documents\Personal Notes"
-NOTES_FOLDER = os.path.join(OBSIDIAN_VAULT_PATH, r"0. Файлы\Inbox")
-PHOTOS_FOLDER = os.path.join(OBSIDIAN_VAULT_PATH, r"0. Файлы\01 - кэш")
-AUDIO_TEMP_FOLDER = os.path.join(OBSIDIAN_VAULT_PATH, r"0. Файлы\01 - кэш")
+ALLOWED_USER_ID = int(os.getenv("ALLOWED_USER_ID"))
+OBSIDIAN_VAULT_PATH = os.getenv("OBSIDIAN_VAULT_PATH").replace("\\", "/")
+NOTES_FOLDER = os.getenv("NOTES_FOLDER").replace("\\", "/")
+PHOTOS_FOLDER = os.getenv("PHOTOS_FOLDER").replace("\\", "/")
+AUDIO_TEMP_FOLDER = os.getenv("AUDIO_TEMP_FOLDER").replace("\\", "/")
+
+print(OBSIDIAN_VAULT_PATH + '\n' + NOTES_FOLDER + '\n' + PHOTOS_FOLDER + '\n' + AUDIO_TEMP_FOLDER)
 
 # Создание папок
 os.makedirs(NOTES_FOLDER, exist_ok=True)
@@ -20,10 +22,21 @@ os.makedirs(PHOTOS_FOLDER, exist_ok=True)
 os.makedirs(AUDIO_TEMP_FOLDER, exist_ok=True)
 
 # Глобальная переменная для текущего файла заметки
-current_note_file = None
+class NoteManager:
+    def __init__(self):
+        self.current_note_file = None
+
+    def set_current_note_file(self, file_path: str):
+        self.current_note_file = file_path
+
+    def get_current_note_file(self) -> str:
+        return self.current_note_file
+
+# Создаем экземпляр NoteManager
+note_manager = NoteManager()
 
 # Инициализация Whisper
-WHISPER_MODEL = "medium"
+WHISPER_MODEL = "base"
 model = whisper.load_model(WHISPER_MODEL)
 
 # Настройка логирования
