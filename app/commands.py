@@ -110,7 +110,9 @@ async def new_note(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def _check_current_note() -> bool:
     """Checks for current_note_file"""
-    return note_manager.get_current_note_file() is None or not os.path.exists(note_manager.get_current_note_file())
+    return note_manager.get_current_note_file() is None or not os.path.exists(
+        note_manager.get_current_note_file()
+    )
 
 
 async def print_note(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -197,7 +199,9 @@ async def callback_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 return
 
             selected_note = notes[index]
-            note_manager.set_current_note_file(os.path.join(NOTES_FOLDER, selected_note))
+            note_manager.set_current_note_file(
+                os.path.join(NOTES_FOLDER, selected_note)
+            )
 
             with open(note_manager.get_current_note_file(), "r", encoding="utf-8") as f:
                 note_content = f.read()
@@ -220,15 +224,14 @@ async def callback_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     )
             try:
                 chat_id = query.message.chat_id
-                message_id = query.message.message_id  
-                
+                message_id = query.message.message_id
+
                 # Удаляем сообщение
-                await context.bot.delete_message(
-                    chat_id=chat_id,
-                    message_id=message_id
-                )
+                await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
             except Exception as e:
-                await query.message.reply_text(f"Ошибка при удалении сообщения: {str(e)}")
+                await query.message.reply_text(
+                    f"Ошибка при удалении сообщения: {str(e)}"
+                )
                 logger.error(f"Error in delete_message: {str(e)}")
     except Exception as e:
         await query.message.reply_text(f"Ошибка при выборе заметки: {str(e)}")

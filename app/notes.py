@@ -10,11 +10,10 @@ import requests
 import uuid
 import os
 
-
 from config import (
     ALLOWED_USER_ID,
     NOTES_FOLDER,
-    PHOTOS_FOLDER,
+    TEMP_FOLDER,
     AUDIO_TEMP_FOLDER,
     logger,
     model,
@@ -27,6 +26,10 @@ class ContentType(Enum):
     CAPTION = auto()
     TRANSCRIPT = auto()
     PHOTO = auto()
+    VIDEO = auto()
+    ANIMATION = auto()
+    STICKER = auto()
+
 
 @dataclass
 class TextContentData:
@@ -39,11 +42,40 @@ class PhotoContentData:
 
 
 @dataclass
+class StickerContentData:
+    file_name: str
+
+
+@dataclass
+class VideoContentData:
+    file_name: str
+
+
+@dataclass
+class AnimationContentData:
+    file_name: str
+
+
+@dataclass
+class BigMediaData:
+    file_id: int
+
+
+@dataclass
 class TranscriptContentData:
     transcript_text: str
 
 
-ContentData = (TextContentData | PhotoContentData | TranscriptContentData)
+ContentData = (
+    TextContentData
+    | PhotoContentData
+    | TranscriptContentData
+    | VideoContentData
+    | AnimationContentData
+    | BigMediaData
+    | StickerContentData
+)
+
 
 def is_allowed_user(update: Update) -> bool:
     """Function for user verification"""
@@ -57,7 +89,7 @@ def _generate_id() -> str:
     return str(uuid.uuid4())[:4]
 
 
-def _generate_filename(type: ContentType) -> str:
+def _generate_filename(type: ContentType, update: Update = None) -> str:
     """Function for generation filename"""
     match type:
         case ContentType.TEXT:
@@ -66,15 +98,28 @@ def _generate_filename(type: ContentType) -> str:
             filename = f"TG_Note_{timestamp}_{note_id}.md"
             return filename
         case ContentType.PHOTO:
-            filename = (
-                f"TG_photo_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{_generate_id()}.jpg"
-            )
+            filename = f"TG_photo_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{_generate_id()}.jpg"
+            return filename
+        case ContentType.VIDEO:
+            filename = f"TG_video_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{_generate_id()}.mp4"
             return filename
         case ContentType.TRANSCRIPT:
-            filename = (
-                f"TG_voice_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{_generate_id()}.ogg"
-            )
+            filename = f"TG_voice_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{_generate_id()}.ogg1"
             return filename
+        case ContentType.ANIMATION:
+            filename = f"TG_animation_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{_generate_id()}.mp4"
+            return filename
+        case ContentType.STICKER:
+            filename = f"TG_sticker_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{_generate_id()}"
+            # Проверяем, анимированный или видео-стикер
+            if update and hasattr(update.message, "sticker") and update.message.sticker:
+                if (
+                    update.message.sticker.is_animated
+                    or update.message.sticker.is_video
+                ):
+                    return filename + ".mp4"  # Для анимированных и видео
+                return filename + ".webp"  # Для статических
+            return filename + ".webp"  # По умолчанию
 
 
 def create_new_note():
@@ -98,11 +143,26 @@ def append_to_note(content: str):
 def _format_content(type: ContentType, data: ContentData) -> str:
     """Function for formating content to be added to the note"""
     match type, data:
-        case (ContentType.TEXT, TextContentData(text)) | (ContentType.CAPTION, TextContentData(text)):
+        case (
+            (ContentType.TEXT, TextContentData(text))
+            | (ContentType.CAPTION, TextContentData(text))
+        ):
             return f"{text}\n"
         case ContentType.TRANSCRIPT, TranscriptContentData(transcript_text):
             return f"[Voice Transcript]: \n{transcript_text}\n"
         case ContentType.PHOTO, PhotoContentData(file_name):
+            return f"![[{file_name}|300]]\n"
+        case (
+            (ContentType.VIDEO, VideoContentData(file_name))
+            | (ContentType.ANIMATION, AnimationContentData(file_name))
+        ):
+            return f"![[{file_name}]]\n"
+        case (
+            (ContentType.VIDEO, BigMediaData(file_id))
+            | (ContentType.ANIMATION, BigMediaData(file_id))
+        ):
+            return f"[Big Video: {file_id}]"
+        case ContentType.STICKER, StickerContentData(file_name):
             return f"![[{file_name}|300]]\n"
 
 
@@ -129,7 +189,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         photo = update.message.photo[-1]  # Берем фото наилучшего качества
         file = await photo.get_file()
         file_name = _generate_filename(ContentType.PHOTO)
-        file_path = os.path.join(PHOTOS_FOLDER, file_name)
+        file_path = os.path.join(TEMP_FOLDER, file_name)
 
         response = requests.get(file.file_path)
         with open(file_path, "wb") as f:
@@ -142,11 +202,15 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Проверяем, есть ли подпись к фото
         caption = update.message.caption
         if caption:
-            formatted_caption = _format_content(ContentType.CAPTION, TextContentData(caption))
+            formatted_caption = _format_content(
+                ContentType.CAPTION, TextContentData(caption)
+            )
             append_to_note(formatted_caption)
-            await update.message.reply_text("Фото и подпись добавлены в заметку.")
+            await update.message.reply_text(
+                "Фото и подпись добавлены в заметку. #photo"
+            )
         else:
-            await update.message.reply_text("Фото и подпись добавлены в заметку.")
+            await update.message.reply_text("Фото добавлено в заметку. #photo")
     except Exception as e:
         await update.message.reply_text(f"Ошибка при добавлении фото: {str(e)}")
         logger.error(f"Error in handle_photo: {str(e)}")
@@ -188,7 +252,9 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         result = model.transcribe(wav_path, language="ru")
         transcript_text = result["text"]
 
-        formatted_transcript = _format_content(ContentType.TRANSCRIPT, TranscriptContentData(transcript_text))
+        formatted_transcript = _format_content(
+            ContentType.TRANSCRIPT, TranscriptContentData(transcript_text)
+        )
         append_to_note(formatted_transcript)
 
         await update.message.reply_text(
@@ -204,17 +270,128 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
             os.remove(wav_path)
 
 
-def transcribe_audio(wav_path: str) -> str:
-    """Transcribes an audio file and returns the text"""
-    if not wav_path or not os.path.exists(wav_path):
-        raise FileNotFoundError("WAV file not found")
+async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Function for handle video messege. Add video and capture to current note"""
+    if not is_allowed_user(update):
+        return
+    try:
+        video = update.message.video
 
-    result = model.transcribe(wav_path, language="ru")
-    return result["text"]
+        if video.file_size < 20971520:
+            file = await video.get_file()
+            file_name = _generate_filename(ContentType.VIDEO)
+            file_path = os.path.join(TEMP_FOLDER, file_name)
+
+            response = requests.get(file.file_path, stream=True)
+            with open(file_path, "wb") as f:
+                f.write(response.content)
+
+            # Добавляем фото в заметку
+            markdown_link = _format_content(
+                ContentType.VIDEO, VideoContentData(file_name)
+            )
+            append_to_note(markdown_link)
+        else:
+            file_id = video.file_id
+
+            markdown_link = _format_content(ContentType.VIDEO, BigMediaData(file_id))
+            append_to_note(markdown_link)
+
+        # Проверяем, есть ли подпись к фото
+        caption = update.message.caption
+        if caption:
+            formatted_caption = _format_content(
+                ContentType.CAPTION, TextContentData(caption)
+            )
+            append_to_note(formatted_caption)
+            await update.message.reply_text(
+                "Видео и подпись добавлены в заметку. #video"
+            )
+        else:
+            await update.message.reply_text("Видео добавлено в заметку. #video")
+    except Exception as e:
+        await update.message.reply_text(f"Ошибка при добавлении Видео: {str(e)}")
+        logger.error(f"Error in handle_video: {str(e)}")
 
 
-def cleanup_temp_files(*file_paths):
-    """Cleans up temporary files"""
-    for path in file_paths:
-        if path and os.path.exists(path):
-            os.remove(path)
+async def handle_animation(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Function for handle gif messege. Add gif and capture to current note"""
+    if not is_allowed_user(update):
+        return
+    try:
+        animation = update.message.animation
+
+        if animation.file_size < 52428800:
+            file = await animation.get_file()
+            file_name = _generate_filename(ContentType.ANIMATION)
+            file_path = os.path.join(TEMP_FOLDER, file_name)
+
+            response = requests.get(file.file_path)
+            with open(file_path, "wb") as f:
+                f.write(response.content)
+
+            # Добавляем фото в заметку
+            markdown_link = _format_content(
+                ContentType.ANIMATION, AnimationContentData(file_name)
+            )
+            append_to_note(markdown_link)
+        else:
+            file_id = animation.file_id
+
+            markdown_link = _format_content(
+                ContentType.ANIMATION, BigMediaData(file_id)
+            )
+            append_to_note(markdown_link)
+
+        # Проверяем, есть ли подпись к фото
+        caption = update.message.caption
+        if caption:
+            formatted_caption = _format_content(
+                ContentType.CAPTION, TextContentData(caption)
+            )
+            append_to_note(formatted_caption)
+            await update.message.reply_text(
+                "Анимация и подпись добавлены в заметку. #animation"
+            )
+        else:
+            await update.message.reply_text("Анимация добавлено в заметку. #animation")
+    except Exception as e:
+        await update.message.reply_text(f"Ошибка при добавлении Анимации: {str(e)}")
+        logger.error(f"Error in handle_animation: {str(e)}")
+
+
+async def handle_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Function to handle sticker message. Add sticker image to current note"""
+    if not is_allowed_user(update):
+        return
+    try:
+        sticker = update.message.sticker
+        file = await sticker.get_file()
+        file_name = _generate_filename(ContentType.STICKER, update)  # Передаем update
+        file_path = os.path.join(TEMP_FOLDER, file_name)
+
+        response = requests.get(file.file_path)
+        with open(file_path, "wb") as f:
+            f.write(response.content)
+
+        # Добавляем стикер в заметку
+        markdown_link = _format_content(
+            ContentType.STICKER, StickerContentData(file_name)
+        )
+        append_to_note(markdown_link)
+
+        # Проверяем, есть ли подпись к стикеру
+        caption = update.message.caption
+        if caption:
+            formatted_caption = _format_content(
+                ContentType.CAPTION, TextContentData(caption)
+            )
+            append_to_note(formatted_caption)
+            await update.message.reply_text(
+                "Стикер и подпись добавлены в заметку. #sticker"
+            )
+        else:
+            await update.message.reply_text("Стикер добавлен в заметку. #sticker")
+    except Exception as e:
+        await update.message.reply_text(f"Ошибка при добавлении стикера: {str(e)}")
+        logger.error(f"Error in handle_sticker: {str(e)}")
