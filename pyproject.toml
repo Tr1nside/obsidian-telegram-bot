@@ -7,7 +7,9 @@ requires-python = ">=3.12"
 dependencies = [
     "ffmpeg>=1.4",
     "imageio>=2.37.0",
+    "imageio-ffmpeg>=0.6.0",
     "lottie>=0.7.1",
+    "moviepy>=2.1.2",
     "openai-whisper>=20240930",
     "pydub>=0.25.1",
     "python-dotenv>=1.1.0",
