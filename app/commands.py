@@ -5,7 +5,7 @@ from enum import Enum, auto
 from dataclasses import dataclass
 from typing import List
 
-from notes import create_new_note, is_allowed_user
+from handlers.utils import create_new_note, is_allowed_user
 from config import logger, NOTES_FOLDER, AUDIO_TEMP_FOLDER, note_manager
 
 

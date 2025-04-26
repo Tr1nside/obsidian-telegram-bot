@@ -8,7 +8,7 @@ from telegram.ext import (
     filters,
     CallbackQueryHandler,
 )
-from notes import (
+from handlers import (
     handle_photo,
     handle_text,
     handle_voice,
