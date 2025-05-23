@@ -1,4 +1,5 @@
-from telegram import Update
+from telegram import Update, ReactionTypeEmoji
+from telegram.ext import ContextTypes
 from datetime import datetime
 from enum import Enum, auto
 from dataclasses import dataclass
@@ -23,6 +24,8 @@ class ContentType(Enum):
     VIDEO = auto()
     ANIMATION = auto()
     STICKER = auto()
+    LOCATION = auto()
+    DOCUMENT = auto()
 
 
 @dataclass
@@ -59,6 +62,14 @@ class BigMediaData:
 class TranscriptContentData:
     transcript_text: str
 
+@dataclass
+class LocationData:
+    location: str
+
+@dataclass
+class DocumentContentData:
+    file_name: str
+
 
 ContentData = Union[
     TextContentData,
@@ -68,6 +79,8 @@ ContentData = Union[
     AnimationContentData,
     BigMediaData,
     StickerContentData,
+    LocationData,
+    DocumentContentData,
 ]
 
 
@@ -142,6 +155,10 @@ def format_content(type: ContentType, data: ContentData) -> str:
             return f"[Big Media: {file_id}]"
         case (ContentType.STICKER | ContentType.ANIMATION, AnimationContentData(file_name) | StickerContentData(file_name)):
             return f"![[{file_name}|300]]\n"
+        case ContentType.LOCATION, LocationData(location):
+            return f"[Location]: \n{location}\n"
+        case ContentType.DOCUMENT, DocumentContentData(file_name):
+            return f"![[{file_name}]]\n"
 
 
 def mp4_to_gif(input_path: str, filename: str, fps: int = 80, scale: float = 0.5) -> str:
@@ -184,3 +201,16 @@ def tgs_to_gif(input_path: str, output_filename: str, fps: int = 30, scale: floa
     loop = asyncio.get_running_loop()
     with ThreadPoolExecutor() as pool:
         return loop.run_in_executor(pool, sync_convert)
+
+async def set_reaction(update: Update, context: ContextTypes.DEFAULT_TYPE, emoji: str = "🔥") -> bool:
+
+    try:
+        await context.bot.set_message_reaction(
+            chat_id=update.effective_chat.id,
+            message_id=update.message.message_id,
+            reaction=[ReactionTypeEmoji(emoji=emoji)]
+        )
+        return True
+    except Exception as e:
+        logger.error(f"Error setting reaction: {str(e)}")
+        return False

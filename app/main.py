@@ -15,6 +15,9 @@ from handlers import (
     handle_video,
     handle_animation,
     handle_sticker,
+    handle_video_note,
+    handle_location,
+    handle_document
 )
 from commands import (
     start,
@@ -55,9 +58,12 @@ def main():
     )
     application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     application.add_handler(MessageHandler(filters.VIDEO, handle_video))
+    application.add_handler(MessageHandler(filters.VIDEO_NOTE, handle_video_note))
     application.add_handler(MessageHandler(filters.ANIMATION, handle_animation))
     application.add_handler(MessageHandler(filters.VOICE, handle_voice))
     application.add_handler(MessageHandler(filters.Sticker.ALL, handle_sticker))
+    application.add_handler(MessageHandler(filters.LOCATION, handle_location))
+    application.add_handler(MessageHandler(filters.Document.ALL, handle_document))
     application.add_error_handler(error_handler)
 
     # Устанавливаем меню команд асинхронно

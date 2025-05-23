@@ -7,13 +7,17 @@ from .utils import (
     ContentType,
     TextContentData,
     append_to_note,
-)
+    set_reaction
+    )
 
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Function for handle text messege. Add text to current note"""
     if not is_allowed_user(update):
         return
+    
+    await set_reaction(update, context)
+    
     try:
         text = update.message.text
         formatted_text = format_content(ContentType.TEXT, TextContentData(text))

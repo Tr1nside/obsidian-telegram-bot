@@ -2,14 +2,18 @@ from telegram import Update
 from telegram.ext import ContextTypes
 import requests
 import os
-from .utils import is_allowed_user, append_to_note, format_content, generate_filename, mp4_to_gif, ContentType, AnimationContentData, BigMediaData, TextContentData
+from .utils import is_allowed_user, append_to_note, format_content, generate_filename, mp4_to_gif, ContentType, AnimationContentData, BigMediaData, set_reaction
 from config import logger, TEMP_FOLDER
+from .caption import append_caption
 
 
 async def handle_animation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Функция для обработки GIF-сообщений. Скачивает как MP4, конвертирует в GIF и добавляет в заметку."""
     if not is_allowed_user(update):
         return
+    
+    await set_reaction(update, context)
+
     mp4_file_path = None
     try:
         # Проверяем существование TEMP_FOLDER и создаем, если не существует
@@ -34,20 +38,16 @@ async def handle_animation(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Форматируем и добавляем в заметку
             markdown_link = format_content(ContentType.ANIMATION, AnimationContentData(gif_file_name))
+            append_caption(update)
             append_to_note(markdown_link)
+            await update.message.reply_text("GIF и подпись добавлены в заметку. #animation")
         else:
             file_id = animation.file_id
             markdown_link = format_content(ContentType.ANIMATION, BigMediaData(file_id))
+            append_caption(update)
             append_to_note(markdown_link)
-
-        # Проверяем, есть ли подпись к анимации
-        caption = update.message.caption
-        if caption:
-            formatted_caption = format_content(ContentType.CAPTION, TextContentData(caption))
-            append_to_note(formatted_caption)
             await update.message.reply_text("GIF и подпись добавлены в заметку. #animation")
-        else:
-            await update.message.reply_text("GIF добавлен в заметку. #animation")
+            
     except Exception as e:
         await update.message.reply_text(f"Ошибка при добавлении GIF: {str(e)}")
         logger.error(f"Ошибка в handle_animation: {str(e)}")
