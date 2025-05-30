@@ -7,15 +7,20 @@ from .utils import (
     ContentType,
     TextContentData,
     append_to_note,
+    main_decorator,
+    ensure_proper_code_blocks,
 )
 
 
+@main_decorator
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Function for handle text messege. Add text to current note"""
     if not is_allowed_user(update):
         return
+
     try:
-        text = update.message.text
+        text = update.message.text_markdown_v2
+        text = ensure_proper_code_blocks(text)
         formatted_text = format_content(ContentType.TEXT, TextContentData(text))
         append_to_note(formatted_text)
         await update.message.reply_text("Текст добавлен в заметку.")

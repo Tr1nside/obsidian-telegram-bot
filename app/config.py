@@ -9,16 +9,17 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 
 # Конфигурация
 ALLOWED_USER_ID = int(os.getenv("ALLOWED_USER_ID"))
-OBSIDIAN_VAULT_PATH = os.getenv("OBSIDIAN_VAULT_PATH").replace("\\", "/")
-NOTES_FOLDER = os.getenv("NOTES_FOLDER").replace("\\", "/")
-TEMP_FOLDER = os.getenv("TEMP_FOLDER").replace("\\", "/")
-AUDIO_TEMP_FOLDER = os.getenv("AUDIO_TEMP_FOLDER").replace("\\", "/")
-
+OBSIDIAN_VAULT_PATH = os.getenv("OBSIDIAN_VAULT_PATH")
+NOTES_FOLDER = os.getenv("NOTES_FOLDER")
+TEMP_FOLDER = os.getenv("TEMP_FOLDER")
+AUDIO_TEMP_FOLDER = os.getenv("AUDIO_TEMP_FOLDER")
+ATTACH_FOLDER = os.getenv("ATTACH_FOLDER")
 
 # Создание папок
 os.makedirs(NOTES_FOLDER, exist_ok=True)
 os.makedirs(TEMP_FOLDER, exist_ok=True)
 os.makedirs(AUDIO_TEMP_FOLDER, exist_ok=True)
+os.makedirs(ATTACH_FOLDER, exist_ok=True)
 
 
 # Глобальная переменная для текущего файла заметки
@@ -37,7 +38,7 @@ class NoteManager:
 note_manager = NoteManager()
 
 # Инициализация Whisper
-WHISPER_MODEL = "base"
+WHISPER_MODEL = "medium"  # tiny, base, medium
 model = whisper.load_model(WHISPER_MODEL)
 
 # Настройка логирования

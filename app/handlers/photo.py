@@ -8,20 +8,22 @@ from .utils import (
     ContentType,
     format_content,
     PhotoContentData,
-    TextContentData,
     append_to_note,
+    main_decorator,
 )
-
+from .caption import append_caption
 from config import (
     TEMP_FOLDER,
     logger,
 )
 
 
+@main_decorator
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Function for handle photo messege. Add photo and capture to current note"""
     if not is_allowed_user(update):
         return
+
     try:
         photo = update.message.photo[-1]  # Берем фото наилучшего качества
         file = await photo.get_file()
@@ -34,20 +36,10 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Добавляем фото в заметку
         markdown_link = format_content(ContentType.PHOTO, PhotoContentData(file_name))
+        append_caption(update)
         append_to_note(markdown_link)
+        await update.message.reply_text("Фото добавлено в заметку. #photo")
 
-        # Проверяем, есть ли подпись к фото
-        caption = update.message.caption
-        if caption:
-            formatted_caption = format_content(
-                ContentType.CAPTION, TextContentData(caption)
-            )
-            append_to_note(formatted_caption)
-            await update.message.reply_text(
-                "Фото и подпись добавлены в заметку. #photo"
-            )
-        else:
-            await update.message.reply_text("Фото добавлено в заметку. #photo")
     except Exception as e:
         await update.message.reply_text(f"Ошибка при добавлении фото: {str(e)}")
         logger.error(f"Error in handle_photo: {str(e)}")

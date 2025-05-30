@@ -18,6 +18,7 @@ from .utils import (
     is_allowed_user,
     format_content,
     append_to_note,
+    main_decorator,
 )
 
 
@@ -46,9 +47,11 @@ async def _download_voice_file(voice) -> str:
     return ogg_path
 
 
+@main_decorator
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_allowed_user(update):
         return
+
     try:
         voice = update.message.voice
         ogg_path = await _download_voice_file(voice)
