@@ -11,7 +11,7 @@ from .utils import (
     format_content,
     ContentType,
     LocationData,
-    set_reaction
+    main_decorator
 )
 import requests
 
@@ -31,12 +31,12 @@ async def _get_address_from_coordinates(latitude: float, longitude: float) -> st
         logger.error(f"Ошибка при геокодировании: {str(e)}")
         return "Не удалось получить адрес"
 
+@main_decorator
 async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Function to handle location message. Add location to current note"""
     if not is_allowed_user(update):
         return
-        
-    await set_reaction(update, context)
+    
     
     try:
         location = update.message.location

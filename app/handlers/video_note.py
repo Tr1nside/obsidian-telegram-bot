@@ -15,15 +15,15 @@ from .utils import (
     format_content,
     VideoContentData,
     ContentType,
-    set_reaction
+    main_decorator
 )
 
+@main_decorator
 async def handle_video_note(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Function to handle video note message. Add video note to current note"""
     if not is_allowed_user(update):
         return
-    
-    await set_reaction(update, context)
+
     
     try:
         video_note = update.message.video_note

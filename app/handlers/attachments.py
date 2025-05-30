@@ -15,15 +15,15 @@ from .utils import (
     DocumentContentData,
     BigMediaData,
     ContentType,
-    set_reaction
+    main_decorator
 )
 
+@main_decorator
 async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Function to handle document messages. Add document to current note and save to ATTACH_FOLDER with original filename"""
     if not is_allowed_user(update):
         return
-    
-    await set_reaction(update, context)
+
     
     try:
         document = update.message.document

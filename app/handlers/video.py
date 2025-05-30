@@ -16,16 +16,16 @@ from .utils import (
     VideoContentData,
     BigMediaData,
     ContentType,
-    set_reaction
+    main_decorator
 )
 from .caption import append_caption
 
+@main_decorator
 async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Function for handle video messege. Add video and capture to current note"""
     if not is_allowed_user(update):
         return
-    
-    await set_reaction(update, context)
+
     
     try:
         video = update.message.video

@@ -12,7 +12,8 @@ from typing import Union
 import pylottie  
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-
+from functools import wraps
+import re
 
 from config import ALLOWED_USER_ID, NOTES_FOLDER, note_manager, TEMP_FOLDER, logger
 
@@ -148,13 +149,13 @@ def format_content(type: ContentType, data: ContentData) -> str:
         case ContentType.TRANSCRIPT, TranscriptContentData(transcript_text):
             return f"[Voice Transcript]: \n{transcript_text}\n"
         case ContentType.PHOTO, PhotoContentData(file_name):
-            return f"![[{file_name}|300]]\n"
+            return f"![[{file_name}|600]]\n"
         case ContentType.VIDEO, VideoContentData(file_name):
             return f"![[{file_name}]]\n"
         case (ContentType.VIDEO | ContentType.ANIMATION, BigMediaData(file_id)):
             return f"[Big Media: {file_id}]"
         case (ContentType.STICKER | ContentType.ANIMATION, AnimationContentData(file_name) | StickerContentData(file_name)):
-            return f"![[{file_name}|300]]\n"
+            return f"![[{file_name}|600]]\n"
         case ContentType.LOCATION, LocationData(location):
             return f"[Location]: \n{location}\n"
         case ContentType.DOCUMENT, DocumentContentData(file_name):
@@ -203,7 +204,6 @@ def tgs_to_gif(input_path: str, output_filename: str, fps: int = 30, scale: floa
         return loop.run_in_executor(pool, sync_convert)
 
 async def set_reaction(update: Update, context: ContextTypes.DEFAULT_TYPE, emoji: str = "🔥") -> bool:
-
     try:
         await context.bot.set_message_reaction(
             chat_id=update.effective_chat.id,
@@ -214,3 +214,65 @@ async def set_reaction(update: Update, context: ContextTypes.DEFAULT_TYPE, emoji
     except Exception as e:
         logger.error(f"Error setting reaction: {str(e)}")
         return False
+
+def _delimiter_to_note(update: Update, before: bool = True) -> bool:
+    try:
+        if before:
+            line = "---\n"
+        else:
+            line = "---\n"
+        
+        if (update.message.forward_origin):
+            append_to_note(line)
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"Error add delimiter: {str(e)}")
+        return False
+        
+
+
+before = True
+after = False
+
+def main_decorator(func):
+    @wraps(func)
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        now = datetime.now()
+        formatted_date = now.strftime("%d-%m-%Y %H:%M")
+
+        await set_reaction(update, context)
+        
+        append_to_note(f"\n[{formatted_date}]:")
+        _delimiter_to_note(update, before)
+        
+        result = await func(update, context)
+        
+        _delimiter_to_note(update, after)
+
+        return result
+
+    return wrapper
+
+def ensure_proper_code_blocks(text: str) -> str:
+    # 1. Заменяем *текст* на **текст** (жирный)
+    text = re.sub(r'\*(?!\s)([^\*]+)(?<!\s)\*', r'**\1**', text)
+    
+    # 2. Заменяем _текст_ на *текст* (курсив через *)
+    text = re.sub(r'_(?!\s)([^_]+)(?<!\s)_', r'*\1*', text)
+    
+    # 3. Исправляем зачёркивание: ~текст~ → ~~текст~~
+    text = re.sub(r'~([^~]+)~', r'~~\1~~', text)
+    
+    # 4. Удаляем экранирование: \. \* \> \_ \( \) \+
+    text = re.sub(r'\\([.*>_`~()+-])', r'\1', text)
+    
+    # 5. Исправляем код-блоки (добавляем \n перед ```, если его нет)
+    text = re.sub(
+        r'```([a-z]*)\n(.*?)(?<!\n)```',
+        r'```\1\n\2\n```',
+        text,
+        flags=re.DOTALL
+    )
+    
+    return text

@@ -9,7 +9,7 @@ from .utils import (
     format_content,
     PhotoContentData,
     append_to_note,
-    set_reaction
+    main_decorator
 )
 from .caption import append_caption
 from config import (
@@ -17,13 +17,12 @@ from config import (
     logger,
 )
 
-
+@main_decorator
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Function for handle photo messege. Add photo and capture to current note"""
     if not is_allowed_user(update):
         return
-        
-    await set_reaction(update, context)
+    
     
     try:
         photo = update.message.photo[-1]  # Берем фото наилучшего качества

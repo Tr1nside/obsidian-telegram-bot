@@ -2,17 +2,17 @@ from telegram import Update
 from telegram.ext import ContextTypes
 import requests
 import os
-from .utils import is_allowed_user, append_to_note, format_content, generate_filename, mp4_to_gif, ContentType, AnimationContentData, BigMediaData, set_reaction
+from .utils import is_allowed_user, append_to_note, format_content, generate_filename, mp4_to_gif, ContentType, AnimationContentData, BigMediaData, main_decorator
 from config import logger, TEMP_FOLDER
 from .caption import append_caption
 
 
+@main_decorator
 async def handle_animation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Функция для обработки GIF-сообщений. Скачивает как MP4, конвертирует в GIF и добавляет в заметку."""
     if not is_allowed_user(update):
         return
-    
-    await set_reaction(update, context)
+
 
     mp4_file_path = None
     try:

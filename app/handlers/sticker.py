@@ -3,14 +3,14 @@ from telegram.ext import ContextTypes
 import requests
 import os
 from config import TEMP_FOLDER, logger
-from .utils import is_allowed_user, append_to_note, generate_filename, format_content, TextContentData, ContentType, StickerContentData, mp4_to_gif, tgs_to_gif, set_reaction
+from .utils import is_allowed_user, append_to_note, generate_filename, format_content, TextContentData, ContentType, StickerContentData, mp4_to_gif, tgs_to_gif, main_decorator
 
+@main_decorator
 async def handle_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Функция для обработки сообщений со стикерами. Добавляет стикер в текущую заметку."""
     if not is_allowed_user(update):
         return
-    
-    await set_reaction(update, context)
+
     
     try:
         # Проверяем существование TEMP_FOLDER и создаем, если не существует
