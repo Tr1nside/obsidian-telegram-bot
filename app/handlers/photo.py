@@ -29,15 +29,26 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file = await photo.get_file()
         file_name = generate_filename(ContentType.PHOTO)
         file_path = os.path.join(TEMP_FOLDER, file_name)
-
+        if not file_path:
+            await update.message.reply_text("Ошибка при добавлении фото: не указан путь к файлу")
+            logger.error("Ошибка при добавлении фото: не указан путь к файлу")  
+            return  
+        
         response = requests.get(file.file_path)
+        if not response.content:
+            await update.message.reply_text("Не удалось загрузить фото.")
+            logger.error("Response content is empty")
+            return
+        
         with open(file_path, "wb") as f:
             f.write(response.content)
 
         # Добавляем фото в заметку
         markdown_link = format_content(ContentType.PHOTO, PhotoContentData(file_name))
         append_caption(update)
+
         append_to_note(markdown_link)
+        
         await update.message.reply_text("Фото добавлено в заметку. #photo")
 
     except Exception as e:

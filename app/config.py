@@ -38,7 +38,7 @@ class NoteManager:
 note_manager = NoteManager()
 
 # Инициализация Whisper
-WHISPER_MODEL = "medium"  # tiny, base, medium
+WHISPER_MODEL = "tiny"  # tiny, base, medium
 model = whisper.load_model(WHISPER_MODEL)
 
 # Настройка логирования

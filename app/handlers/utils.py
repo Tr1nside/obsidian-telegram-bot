@@ -247,11 +247,9 @@ def _delimiter_to_note(update: Update, before: bool = True) -> bool:
 
         if update.message.forward_origin:
             append_to_note(line)
-            return True
-        return False
+
     except Exception as e:
         logger.error(f"Error add delimiter: {str(e)}")
-        return False
 
 
 before = True
