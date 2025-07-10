@@ -17,3 +17,4 @@ def append_caption(update: Update):
                 ContentType.CAPTION, TextContentData(caption)
             )
             append_to_note(formatted_caption)
+
